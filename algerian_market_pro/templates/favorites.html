@@ -1,0 +1,44 @@
+{% extends "base.html" %}
+{% block title %}المفضلة - سوق الماكينات{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2><i class="fas fa-heart text-danger"></i> إعلاناتي المحفوظة</h2>
+    <div class="row">
+        {% for machine in machines %}
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <img src="{{ url_for('static', filename='uploads/' + machine.primary_image()) }}" class="card-img-top" alt="{{ machine.name }}">
+                <div class="card-body">
+                    <h6 class="card-title">{{ machine.name[:25] }}</h6>
+                    <p class="text-muted small mb-1"><i class="fas fa-map-marker-alt"></i> {{ machine.wilaya }}</p>
+                    <p class="text-primary fw-bold mb-2">{{ "{:,.0f}".format(machine.price) }} دج</p>
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('machine_detail', slug=machine.slug) }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-eye"></i></a>
+                        <button class="btn btn-outline-danger btn-sm fav-btn" data-machine-id="{{ machine.id }}"><i class="fas fa-heart"></i></button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% else %}
+        <div class="col-12 text-center py-5">
+            <i class="far fa-heart fa-4x text-muted mb-3"></i>
+            <p class="lead">لم تقم بحفظ أي إعلان في المفضلة بعد.</p>
+            <a href="{{ url_for('search') }}" class="btn btn-primary">تصفح الإعلانات</a>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}
+{% block extra_scripts %}
+<script>
+$('.fav-btn').click(function() {
+    var btn = $(this);
+    var machineId = btn.data('machine-id');
+    $.post('/favorite/' + machineId, function(data) {
+        if (data.status === 'removed') {
+            btn.closest('.col-md-3').fadeOut();
+        }
+    });
+});
+</script>
+{% endblock %}

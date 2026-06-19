@@ -1,0 +1,77 @@
+{% extends "base.html" %}
+{% block title %}{{ _('nav_home') }} - {{ _('site_name') }}{% endblock %}
+{% block content %}
+<!-- Hero Section -->
+<div class="hero-section">
+    <div class="container">
+        <h1>{{ _('home_hero_title') }}</h1>
+        <p class="lead">{{ _('home_hero_subtitle') }}</p>
+        <div class="search-box mt-4">
+            <form action="{{ url_for('search') }}" method="GET">
+                <div class="input-group">
+                    <input type="text" name="q" class="form-control" placeholder="{{ _('search_placeholder') }}">
+                    <button class="btn btn-light" type="submit"><i class="fas fa-search"></i> {{ _('btn_search') }}</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<div class="container mt-5">
+    {% if featured %}
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h3><i class="fas fa-star text-warning"></i> {{ _('home_featured') }}</h3>
+        <a href="{{ url_for('search') }}" class="btn btn-outline-primary">{{ _('home_view_all') }}</a>
+    </div>
+    <div class="row">
+        {% for machine in featured %}
+        <div class="col-md-4 mb-4">
+            <div class="card position-relative">
+                <span class="featured-badge"><i class="fas fa-crown"></i> {{ _('admin_feature') }}</span>
+                <img src="{{ url_for('static', filename='uploads/' + machine.primary_image()) }}" class="card-img-top" alt="{{ machine.name }}">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-center mb-2">
+                        <h5 class="card-title mb-0">{{ machine.name[:30] }}{% if machine.name|length > 30 %}...{% endif %}</h5>
+                        {% if machine.average_rating() > 0 %}
+                        <small class="rating-stars">
+                            {% for i in range(5) %}
+                                {% if i < machine.average_rating()|int %}<i class="fas fa-star"></i>{% elif i < machine.average_rating() %}<i class="fas fa-star-half-alt"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+                            {% endfor %}
+                            <span class="text-muted">({{ machine.reviews.count() }})</span>
+                        </small>
+                        {% endif %}
+                    </div>
+                    <p class="text-muted mb-2"><i class="fas fa-map-marker-alt"></i> {{ machine.wilaya }} | <i class="fas fa-tag"></i> {{ machine.category[:10] }}</p>
+                    <h4 class="text-primary fw-bold">{{ "{:,.0f}".format(machine.price) }} {{ _('label_dzd') }}</h4>
+                    <div class="d-flex justify-content-between align-items-center">
+                        <a href="{{ url_for('machine_detail', slug=machine.slug) }}" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i> {{ _('btn_view') }}</a>
+                        <a href="{{ url_for('whatsapp_contact', machine_id=machine.id) }}" class="btn btn-success btn-sm" target="_blank"><i class="fab fa-whatsapp"></i> {{ _('btn_whatsapp') }}</a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    {% endif %}
+
+    <h3 class="mb-4 mt-5"><i class="fas fa-clock"></i> {{ _('home_latest') }}</h3>
+    <div class="row">
+        {% for machine in latest %}
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <img src="{{ url_for('static', filename='uploads/' + machine.primary_image()) }}" class="card-img-top" alt="{{ machine.name }}">
+                <div class="card-body">
+                    <h6 class="card-title">{{ machine.name[:25] }}{% if machine.name|length > 25 %}...{% endif %}</h6>
+                    <p class="text-muted small mb-1"><i class="fas fa-map-marker-alt"></i> {{ machine.wilaya }}</p>
+                    <p class="text-primary fw-bold mb-2">{{ "{:,.0f}".format(machine.price) }} {{ _('label_dzd') }}</p>
+                    <div class="d-flex justify-content-between">
+                        <a href="{{ url_for('machine_detail', slug=machine.slug) }}" class="btn btn-outline-primary btn-sm"><i class="fas fa-eye"></i></a>
+                        <a href="{{ url_for('whatsapp_contact', machine_id=machine.id) }}" class="btn btn-outline-success btn-sm" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                    </div>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

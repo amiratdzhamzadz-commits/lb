@@ -1,0 +1,63 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Algerian Market{% endblock %}</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/bootstrap.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/fontawesome.min.css') }}">
+    <link rel="stylesheet" href="{{ url_for('static', filename='css/custom.css') }}">
+</head>
+<body class="bg-light">
+    <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="{{ url_for('home') }}">Algerian Market</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse"
+                    data-bs-target="#navbarNav" aria-controls="navbarNav"
+                    aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <!-- Theme toggle button -->
+            <button id="theme-toggle" class="btn btn-outline-light ms-2" type="button">
+                🌙 Dark Mode
+            </button>
+            <div class="collapse navbar-collapse" id="navbarNav">
+                {% block navbar %}{% endblock %}
+            </div>
+        </div>
+    </nav>
+
+    <div class="container mt-4">
+        {% block content %}{% endblock %}
+    </div>
+
+    <!-- Only load main.js to avoid placeholder script errors -->
+    <script src="{{ url_for('static', filename='js/main.js') }}"></script>
+    <script>
+    // Theme toggle logic
+    document.addEventListener('DOMContentLoaded', function () {
+        const toggleBtn = document.getElementById('theme-toggle');
+        const body = document.body;
+
+        // Load saved preference
+        if (localStorage.getItem('theme') === 'dark') {
+            body.classList.add('dark-mode');
+            if(toggleBtn) toggleBtn.textContent = '☀️ Light Mode';
+        }
+
+        if(toggleBtn) {
+            toggleBtn.addEventListener('click', function () {
+                body.classList.toggle('dark-mode');
+                if (body.classList.contains('dark-mode')) {
+                    localStorage.setItem('theme', 'dark');
+                    toggleBtn.textContent = '☀️ Light Mode';
+                } else {
+                    localStorage.removeItem('theme');
+                    toggleBtn.textContent = '🌙 Dark Mode';
+                }
+            });
+        }
+    });
+    </script>
+</body>
+</html>

@@ -1,0 +1,131 @@
+{% extends "base.html" %}
+{% block title %}لوحة التحكم - المدير{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2><i class="fas fa-tachometer-alt"></i> لوحة تحكم المدير</h2>
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <i class="fas fa-cog text-primary"></i>
+                <h3>{{ pending_count }}</h3>
+                <p class="text-muted">في انتظار المراجعة</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <i class="fas fa-users text-success"></i>
+                <h3>{{ total_users }}</h3>
+                <p class="text-muted">إجمالي المستخدمين</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <i class="fas fa-industry text-info"></i>
+                <h3>{{ total_machines }}</h3>
+                <p class="text-muted">إجمالي الإعلانات</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <i class="fas fa-flag text-warning"></i>
+                <h3><a href="{{ url_for('admin_reports') }}">البلاغات</a></h3>
+                <p class="text-muted">إدارة البلاغات</p>
+            </div>
+        </div>
+    </div>
+
+    <ul class="nav nav-tabs mb-3">
+        <li class="nav-item"><a class="nav-link active" href="#all" data-bs-toggle="tab">جميع الإعلانات</a></li>
+        <li class="nav-item"><a class="nav-link" href="#pending" data-bs-toggle="tab">قيد المراجعة</a></li>
+    </ul>
+    <div class="tab-content">
+        <div class="tab-pane active" id="all">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr>
+                            <th>#</th>
+                            <th>الإعلان</th>
+                            <th>البائع</th>
+                            <th>السعر</th>
+                            <th>الحالة</th>
+                            <th>مشاهدات</th>
+                            <th>تاريخ</th>
+                            <th>إجراءات</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for m in machines %}
+                        <tr>
+                            <td>{{ m.id }}</td>
+                            <td><a href="{{ url_for('machine_detail', slug=m.slug) }}">{{ m.name[:30] }}</a></td>
+                            <td>{{ m.seller.username }}</td>
+                            <td>{{ "{:,.0f}".format(m.price) }} دج</td>
+                            <td>
+                                {% if m.status == 'approved' %}<span class="badge bg-success">مقبول</span>
+                                {% elif m.status == 'pending' %}<span class="badge bg-warning text-dark">قيد المراجعة</span>
+                                {% elif m.status == 'rejected' %}<span class="badge bg-danger">مرفوض</span>
+                                {% else %}<span class="badge bg-secondary">تم البيع</span>{% endif %}
+                            </td>
+                            <td>{{ m.views }}</td>
+                            <td>{{ m.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <div class="btn-group btn-group-sm">
+                                    {% if m.status == 'pending' %}
+                                    <a href="{{ url_for('approve_machine', machine_id=m.id) }}" class="btn btn-success" onclick="return confirm('قبول الإعلان؟')"><i class="fas fa-check"></i></a>
+                                    <a href="{{ url_for('reject_machine', machine_id=m.id) }}" class="btn btn-danger" onclick="return confirm('رفض الإعلان؟')"><i class="fas fa-times"></i></a>
+                                    {% endif %}
+                                    <a href="{{ url_for('feature_machine', machine_id=m.id) }}" class="btn btn-warning" title="تبديل التميز">
+                                        <i class="fas fa-star{% if m.is_featured %} text-dark{% endif %}"></i>
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="8" class="text-center">لا توجد إعلانات</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+            {% if pagination.pages > 1 %}
+            <nav>
+                <ul class="pagination justify-content-center">
+                    {% for p in range(1, pagination.pages + 1) %}
+                    <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                        <a class="page-link" href="{{ url_for('admin_dashboard', page=p) }}">{{ p }}</a>
+                    </li>
+                    {% endfor %}
+                </ul>
+            </nav>
+            {% endif %}
+        </div>
+        <div class="tab-pane" id="pending">
+            <div class="table-responsive">
+                <table class="table table-hover">
+                    <thead>
+                        <tr><th>#</th><th>الإعلان</th><th>البائع</th><th>السعر</th><th>تاريخ</th><th>إجراءات</th></tr>
+                    </thead>
+                    <tbody>
+                        {% set pending_machines = machines|selectattr('status', 'equalto', 'pending')|list %}
+                        {% for m in pending_machines %}
+                        <tr>
+                            <td>{{ m.id }}</td>
+                            <td><a href="{{ url_for('machine_detail', slug=m.slug) }}">{{ m.name[:30] }}</a></td>
+                            <td>{{ m.seller.username }}</td>
+                            <td>{{ "{:,.0f}".format(m.price) }} دج</td>
+                            <td>{{ m.created_at.strftime('%Y-%m-%d') }}</td>
+                            <td>
+                                <a href="{{ url_for('approve_machine', machine_id=m.id) }}" class="btn btn-success btn-sm"><i class="fas fa-check"></i> قبول</a>
+                                <a href="{{ url_for('reject_machine', machine_id=m.id) }}" class="btn btn-danger btn-sm"><i class="fas fa-times"></i> رفض</a>
+                            </td>
+                        </tr>
+                        {% else %}
+                        <tr><td colspan="6" class="text-center">لا توجد إعلانات في انتظار المراجعة</td></tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

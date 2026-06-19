@@ -1,0 +1,247 @@
+{% extends "base.html" %}
+{% block title %}{{ machine.name }} - سوق الماكينات{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <nav aria-label="breadcrumb">
+        <ol class="breadcrumb">
+            <li class="breadcrumb-item"><a href="{{ url_for('home') }}">الرئيسية</a></li>
+            <li class="breadcrumb-item"><a href="{{ url_for('search', category=machine.category) }}">{{ machine.category }}</a></li>
+            <li class="breadcrumb-item active">{{ machine.name[:40] }}</li>
+        </ol>
+    </nav>
+
+    <div class="row">
+        <div class="col-lg-8">
+            <div class="card mb-4">
+                <div id="machineCarousel" class="carousel slide">
+                    <div class="carousel-inner">
+                        {% set images = machine.images.all() %}
+                        {% if images %}
+                        {% for img in images %}
+                        <div class="carousel-item {% if loop.first %}active{% endif %}">
+                            <img src="{{ url_for('static', filename='uploads/' + img.filename) }}" class="d-block w-100" style="max-height: 500px; object-fit: contain;" alt="{{ machine.name }}">
+                        </div>
+                        {% endfor %}
+                        {% else %}
+                        <div class="carousel-item active">
+                            <img src="{{ url_for('static', filename='uploads/default.jpg') }}" class="d-block w-100" style="max-height: 500px; object-fit: contain;" alt="No image">
+                        </div>
+                        {% endif %}
+                    </div>
+                    {% if images|length > 1 %}
+                    <button class="carousel-control-prev" type="button" data-bs-target="#machineCarousel" data-bs-slide="prev">
+                        <span class="carousel-control-prev-icon"></span>
+                    </button>
+                    <button class="carousel-control-next" type="button" data-bs-target="#machineCarousel" data-bs-slide="next">
+                        <span class="carousel-control-next-icon"></span>
+                    </button>
+                    {% endif %}
+                </div>
+                {% if machine.is_featured %}<span class="badge bg-warning text-dark position-absolute top-0 start-0 m-3"><i class="fas fa-crown"></i> مميز</span>{% endif %}
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between align-items-start">
+                        <div>
+                            <h2>{{ machine.name }}</h2>
+                            <p class="text-muted">
+                                <i class="fas fa-map-marker-alt"></i> {{ machine.wilaya }} |
+                                <i class="fas fa-tag"></i> {{ machine.category }} |
+                                <i class="fas fa-eye"></i> {{ machine.views }} مشاهدة |
+                                <i class="fas fa-calendar"></i> {{ machine.created_at.strftime('%Y-%m-%d') }}
+                            </p>
+                        </div>
+                        <h2 class="text-primary fw-bold">{{ "{:,.0f}".format(machine.price) }} دج</h2>
+                    </div>
+                    <hr>
+                    <h5>الوصف</h5>
+                    <p style="white-space: pre-line;">{{ machine.description }}</p>
+                    <hr>
+                    <div class="d-flex gap-3">
+                        <a href="{{ url_for('whatsapp_contact', machine_id=machine.id) }}" class="btn btn-success btn-lg" target="_blank">
+                            <i class="fab fa-whatsapp"></i> اتصل عبر واتساب
+                        </a>
+                        {% if current_user.is_authenticated %}
+                        <button class="btn btn-outline-danger btn-lg fav-btn" data-machine-id="{{ machine.id }}">
+                            <i class="{% if machine.id in current_user.favorites|map(attribute='machine_id')|list %}fas{% else %}far{% endif %} fa-heart"></i> حفظ
+                        </button>
+                        <button class="btn btn-outline-warning btn-lg" data-bs-toggle="modal" data-bs-target="#reportModal">
+                            <i class="fas fa-flag"></i> إبلاغ
+                        </button>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-4">
+                <div class="card-header">
+                    <h5><i class="fas fa-star text-warning"></i> التقييمات والمراجعات
+                        {% if machine.average_rating() > 0 %}
+                        <span class="badge bg-warning text-dark">{{ machine.average_rating() }} / 5</span>
+                        {% endif %}
+                        <span class="text-muted small">({{ machine.reviews.count() }} تقييم)</span>
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if current_user.is_authenticated %}
+                    <form action="{{ url_for('add_review', slug=machine.slug) }}" method="POST" class="mb-4">
+                        <div class="mb-2">
+                            <label>تقييمك:</label>
+                            <div class="star-rating">
+                                {% for i in range(5, 0, -1) %}
+                                <input type="radio" name="rating" value="{{ i }}" id="star{{ i }}" hidden>
+                                <label for="star{{ i }}" class="star-label" style="cursor: pointer; font-size: 1.5rem; color: #ddd;">
+                                    <i class="fas fa-star"></i>
+                                </label>
+                                {% endfor %}
+                            </div>
+                        </div>
+                        <div class="mb-2">
+                            <textarea name="comment" class="form-control" rows="3" placeholder="اكتب تعليقك..." required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> إرسال التقييم</button>
+                    </form>
+                    {% else %}
+                    <p><a href="{{ url_for('login') }}">سجل الدخول</a> لإضافة تقييم.</p>
+                    {% endif %}
+
+                    {% set reviews_page = reviews_page if reviews_page else machine.reviews.order_by(Review.created_at.desc()).paginate(page=1, per_page=10) %}
+                    {% for review in reviews_page.items %}
+                    <div class="border-bottom pb-3 mb-3">
+                        <div class="d-flex justify-content-between">
+                            <div>
+                                <strong>{{ review.author.username }}</strong>
+                                <span class="rating-stars ms-2">
+                                    {% for i in range(5) %}
+                                        {% if i < review.rating %}<i class="fas fa-star"></i>{% else %}<i class="far fa-star"></i>{% endif %}
+                                    {% endfor %}
+                                </span>
+                            </div>
+                            <small class="text-muted">{{ review.created_at.strftime('%Y-%m-%d') }}</small>
+                        </div>
+                        <p class="mt-2">{{ review.comment }}</p>
+                        {% if review.reply %}
+                        <div class="bg-light p-3 rounded me-4">
+                            <small class="text-muted"><i class="fas fa-reply"></i> رد البائع:</small>
+                            <p class="mb-0">{{ review.reply }}</p>
+                        </div>
+                        {% elif current_user.is_authenticated and current_user.id == machine.user_id %}
+                        <form action="{{ url_for('reply_review', review_id=review.id) }}" method="POST" class="mt-2">
+                            <div class="input-group">
+                                <input type="text" name="reply" class="form-control" placeholder="اكتب ردك..." required>
+                                <button class="btn btn-outline-primary" type="submit">رد</button>
+                            </div>
+                        </form>
+                        {% endif %}
+                    </div>
+                    {% else %}
+                    <p class="text-muted">لا توجد تقييمات بعد.</p>
+                    {% endfor %}
+                    {% if reviews_page.pages > 1 %}
+                    <nav>
+                        <ul class="pagination justify-content-center">
+                            {% for p in range(1, reviews_page.pages + 1) %}
+                            <li class="page-item {% if p == reviews_page.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('machine_reviews', slug=machine.slug, page=p) }}">{{ p }}</a>
+                            </li>
+                            {% endfor %}
+                        </ul>
+                    </nav>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <div class="col-lg-4">
+            <div class="card mb-4">
+                <div class="card-body">
+                    <h5>معلومات البائع</h5>
+                    <p><i class="fas fa-user"></i> {{ machine.seller.username }}</p>
+                    {% if machine.seller.phone %}
+                    <p><i class="fas fa-phone"></i> {{ machine.seller.phone }}</p>
+                    {% endif %}
+                    <p><i class="fas fa-calendar-alt"></i> عضو منذ {{ machine.seller.created_at.strftime('%Y-%m') }}</p>
+                    <a href="{{ url_for('whatsapp_contact', machine_id=machine.id) }}" class="btn btn-success w-100" target="_blank">
+                        <i class="fab fa-whatsapp"></i> تواصل عبر واتساب
+                    </a>
+                </div>
+            </div>
+
+            {% if related %}
+            <div class="card">
+                <div class="card-header"><h5>إعلانات مشابهة</h5></div>
+                <div class="card-body">
+                    {% for rm in related %}
+                    <div class="d-flex mb-3">
+                        <img src="{{ url_for('static', filename='uploads/' + rm.primary_image()) }}" width="60" height="60" style="object-fit: cover; border-radius: 8px;" alt="{{ rm.name }}">
+                        <div class="me-2">
+                            <a href="{{ url_for('machine_detail', slug=rm.slug) }}" class="text-decoration-none">{{ rm.name[:25] }}</a>
+                            <br><small class="text-primary fw-bold">{{ "{:,.0f}".format(rm.price) }} دج</small>
+                        </div>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+
+<div class="modal fade" id="reportModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <form action="{{ url_for('report_machine', machine_id=machine.id) }}" method="POST">
+                <div class="modal-header">
+                    <h5 class="modal-title"><i class="fas fa-flag text-danger"></i> الإبلاغ عن إعلان</h5>
+                    <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label class="form-label">سبب الإبلاغ</label>
+                        <select name="reason" class="form-select" required>
+                            <option value="">اختر سبباً...</option>
+                            <option value="مخالف للقوانين">مخالف للقوانين</option>
+                            <option value="إعلان وهمي">إعلان وهمي</option>
+                            <option value="صور غير حقيقية">صور غير حقيقية</option>
+                            <option value="سعر غير واقعي">سعر غير واقعي</option>
+                            <option value="مكرر">مكرر</option>
+                            <option value="أخرى">أخرى</option>
+                        </select>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">تفاصيل إضافية</label>
+                        <textarea name="details" class="form-control" rows="3"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">إلغاء</button>
+                    <button type="submit" class="btn btn-danger"><i class="fas fa-flag"></i> إبلاغ</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+$('.fav-btn').click(function() {
+    var btn = $(this);
+    var machineId = btn.data('machine-id');
+    $.post('/favorite/' + machineId, function(data) {
+        if (data.status === 'added') {
+            btn.html('<i class="fas fa-heart"></i> تم الحفظ');
+            btn.removeClass('btn-outline-danger').addClass('btn-danger');
+        } else {
+            btn.html('<i class="far fa-heart"></i> حفظ');
+            btn.removeClass('btn-danger').addClass('btn-outline-danger');
+        }
+    });
+});
+$('input[name="rating"]').change(function() {
+    $('.star-label').css('color', '#ddd');
+    $(this).nextAll('label').css('color', '#ffc107');
+});
+</script>
+{% endblock %}

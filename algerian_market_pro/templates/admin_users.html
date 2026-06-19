@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+{% block title %}إدارة المستخدمين{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2><i class="fas fa-users"></i> إدارة المستخدمين</h2>
+    <hr>
+    <div class="table-responsive">
+        <table class="table table-striped">
+            <thead><tr><th>#</th><th>اسم المستخدم</th><th>البريد</th><th>الدور</th><th>حالة التحقق</th><th>التسجيل</th><th>الإجراءات</th></tr></thead>
+            <tbody>
+            {% for u in users %}
+            <tr>
+                <td>{{ u.id }}</td>
+                <td>{{ u.username }}</td>
+                <td>{{ u.email }}</td>
+                <td><span class="badge bg-{{ 'danger' if u.role == 'admin' else 'secondary' }}">{{ u.role }}</span></td>
+                <td>{% if u.is_verified %}<span class="badge bg-success">موثق</span>{% else %}<span class="badge bg-warning text-dark">غير موثق</span>{% endif %}</td>
+                <td>{{ u.created_at.strftime('%Y-%m-%d') }}</td>
+                <td>
+                    <a href="{{ url_for('toggle_user_verify', user_id=u.id) }}" class="btn btn-sm btn-outline-primary">
+                        {% if u.is_verified %}<i class="fas fa-times-circle"></i> إلغاء التوثيق{% else %}<i class="fas fa-check-circle"></i> توثيق{% endif %}
+                    </a>
+                </td>
+            </tr>
+            {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if pagination %}
+    <nav>{% for p in pagination.iter_pages() %}{% if p %}<a href="?page={{ p }}" class="btn btn-sm btn-{{ 'primary' if p == pagination.page else 'outline-secondary' }} mx-1">{{ p }}</a>{% endif %}{% endfor %}</nav>
+    {% endif %}
+</div>
+{% endblock %}

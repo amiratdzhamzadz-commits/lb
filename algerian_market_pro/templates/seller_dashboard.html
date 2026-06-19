@@ -1,0 +1,118 @@
+{% extends "base.html" %}
+{% block title %}إعلاناتي - سوق الماكينات{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h2><i class="fas fa-store"></i> إعلاناتي</h2>
+        <div>
+            <a href="{{ url_for('new_machine') }}" class="btn btn-primary"><i class="fas fa-plus-circle"></i> إعلان جديد</a>
+            <a href="{{ url_for('seller_export') }}" class="btn btn-success"><i class="fas fa-file-excel"></i> تحميل تقرير Excel</a>
+        </div>
+    </div>
+    <div class="row mb-4">
+        <div class="col-md-3">
+            <div class="stat-card">
+                <i class="fas fa-industry text-primary"></i>
+                <h3>{{ total }}</h3>
+                <p class="text-muted">إجمالي الإعلانات</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <i class="fas fa-check-circle text-success"></i>
+                <h3>{{ approved }}</h3>
+                <p class="text-muted">مقبولة</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <i class="fas fa-eye text-info"></i>
+                <h3>{{ total_views }}</h3>
+                <p class="text-muted">إجمالي المشاهدات</p>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="stat-card">
+                <i class="fas fa-percent text-warning"></i>
+                <h3>{{ approval_rate }}%</h3>
+                <p class="text-muted">نسبة الموافقة</p>
+            </div>
+        </div>
+    </div>
+    <div class="card mb-4">
+        <div class="card-header"><h5><i class="fas fa-chart-line"></i> المشاهدات آخر 30 يوم</h5></div>
+        <div class="card-body">
+            <canvas id="viewsChart" height="100"></canvas>
+        </div>
+    </div>
+    <div class="table-responsive">
+        <table class="table table-hover">
+            <thead>
+                <tr><th>#</th><th>الصورة</th><th>الإعلان</th><th>السعر</th><th>الحالة</th><th>مشاهدات</th><th>واتساب</th><th>التقييم</th><th>تاريخ</th><th>إجراءات</th></tr>
+            </thead>
+            <tbody>
+                {% for m in machines %}
+                <tr>
+                    <td>{{ m.id }}</td>
+                    <td><img src="{{ url_for('static', filename='uploads/' + m.primary_image()) }}" width="50" height="50" style="object-fit: cover; border-radius: 8px;"></td>
+                    <td><a href="{{ url_for('machine_detail', slug=m.slug) }}">{{ m.name[:30] }}</a></td>
+                    <td>{{ "{:,.0f}".format(m.price) }} دج</td>
+                    <td>
+                        {% if m.status == 'approved' %}<span class="badge bg-success">منشور</span>
+                        {% elif m.status == 'pending' %}<span class="badge bg-warning text-dark">قيد المراجعة</span>
+                        {% elif m.status == 'rejected' %}<span class="badge bg-danger">مرفوض</span>
+                        {% else %}<span class="badge bg-secondary">تم البيع</span>{% endif %}
+                    </td>
+                    <td>{{ m.views }}</td>
+                    <td>{{ m.whatsapp_clicks }}</td>
+                    <td>{% if m.average_rating() > 0 %}{{ m.average_rating() }} ⭐{% else %}-{% endif %}</td>
+                    <td>{{ m.created_at.strftime('%Y-%m-%d') }}</td>
+                    <td>
+                        {% if m.status == 'approved' %}
+                        <a href="{{ url_for('mark_as_sold', machine_id=m.id) }}" class="btn btn-secondary btn-sm" onclick="return confirm('تأكيد البيع؟')"><i class="fas fa-check-double"></i> تم البيع</a>
+                        {% endif %}
+                    </td>
+                </tr>
+                {% else %}
+                <tr><td colspan="10" class="text-center">
+                    <p class="mt-3">لا توجد إعلانات بعد.</p>
+                    <a href="{{ url_for('new_machine') }}" class="btn btn-primary"><i class="fas fa-plus-circle"></i> أضف إعلانك الأول</a>
+                </td></tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+    {% if pagination.pages > 1 %}
+    <nav>
+        <ul class="pagination justify-content-center">
+            {% for p in range(1, pagination.pages + 1) %}
+            <li class="page-item {% if p == pagination.page %}active{% endif %}">
+                <a class="page-link" href="{{ url_for('seller_dashboard', page=p) }}">{{ p }}</a>
+            </li>
+            {% endfor %}
+        </ul>
+    </nav>
+    {% endif %}
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+<script>
+const ctx = document.getElementById('viewsChart').getContext('2d');
+new Chart(ctx, {
+    type: 'line',
+    data: {
+        labels: {{ chart_labels|safe }},
+        datasets: [{
+            label: 'المشاهدات',
+            data: {{ chart_data|safe }},
+            borderColor: '#0d6efd',
+            backgroundColor: 'rgba(13, 110, 253, 0.1)',
+            fill: true,
+            tension: 0.4
+        }]
+    },
+    options: { responsive: true, plugins: { legend: { display: false } }, scales: { y: { beginAtZero: true } } }
+});
+</script>
+{% endblock %}

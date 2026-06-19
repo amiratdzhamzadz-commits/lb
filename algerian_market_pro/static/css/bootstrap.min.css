@@ -1,0 +1,5 @@
+/* Minimal Bootstrap CSS placeholder */
+body { margin:0; font-family:Arial,Helvetica,sans-serif; }
+.container { width:100%; padding:15px; }
+.navbar { display:flex; justify-content:space-between; align-items:center; }
+.btn { padding:0.5rem 1rem; border:none; cursor:pointer; }

@@ -1,0 +1,8 @@
+/* Dark mode support */
+.dark-mode {
+    background-color: #212529 !important;
+    color: #f8f9fa !important;
+}
+.dark-mode a {
+    color: #f8f9fa !important;
+}

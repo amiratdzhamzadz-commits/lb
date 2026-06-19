@@ -1,0 +1,98 @@
+{% extends "base.html" %}
+{% block title %}{{ _('nav_search') }} - {{ _('site_name') }}{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-3 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <h5><i class="fas fa-filter"></i> {{ _('nav_search') }}</h5>
+                    <form method="GET">
+                        <div class="mb-3">
+                            <label class="form-label">{{ _('btn_search') }}</label>
+                            <input type="text" name="q" class="form-control" value="{{ query }}" placeholder="{{ _('search_placeholder') }}">
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">{{ _('label_wilaya') }}</label>
+                            <select name="wilaya" class="form-select">
+                                <option value="">{{ _('search_all_wilayas') }}</option>
+                                {% for w in ["Adrar","Chlef","Laghouat","Oum El Bouaghi","Batna","Bejaia","Biskra","Bechar","Blida","Bouira","Tamanrasset","Tebessa","Tlemcen","Tiaret","Tizi Ouzou","Alger","Djelfa","Jijel","Setif","Saida","Skikda","Sidi Bel Abbes","Annaba","Guelma","Constantine","Medea","Mostaganem","M'Sila","Mascara","Ouargla","Oran","El Bayadh","Illizi","Bordj Bou Arreridj","Boumerdes","El Tarf","Tindouf","Tissemsilt","El Oued","Khenchela","Souk Ahras","Tipaza","Mila","Ain Defla","Naama","Ain Temouchent","Ghardaia","Relizane","Timimoun","Bordj Badji Mokhtar","Ouled Djellal","Beni Abbes","In Salah","In Guezzam","Touggourt","Djanet","El M'Ghair","El Meniaa"] %}
+                                <option value="{{ w }}" {% if request.args.get('wilaya') == w %}selected{% endif %}>{{ w }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">{{ _('label_category') }}</label>
+                            <select name="category" class="form-select">
+                                <option value="">{{ _('search_all_categories') }}</option>
+                                {% set cats = [_('category_agriculture'), _('category_industrial'), _('category_construction'), _('category_transport'), _('category_restaurant'), _('category_medical'), _('category_electrical'), _('category_other')] %}
+                                {% set cat_keys = ["الماكينات الزراعية","الماكينات الصناعية","معدات البناء","معدات النقل","معدات المطاعم","معدات طبية","أدوات كهربائية","أخرى"] %}
+                                {% for i in range(cats|length) %}
+                                <option value="{{ cat_keys[i] }}" {% if request.args.get('category') == cat_keys[i] %}selected{% endif %}>{{ cats[i] }}</option>
+                                {% endfor %}
+                            </select>
+                        </div>
+                        <div class="row g-2 mb-3">
+                            <div class="col-6">
+                                <label class="form-label">{{ _('search_min_price') }}</label>
+                                <input type="number" name="min_price" class="form-control" value="{{ request.args.get('min_price', '') }}" placeholder="0">
+                            </div>
+                            <div class="col-6">
+                                <label class="form-label">{{ _('search_max_price') }}</label>
+                                <input type="number" name="max_price" class="form-control" value="{{ request.args.get('max_price', '') }}" placeholder="999999">
+                            </div>
+                        </div>
+                        <button type="submit" class="btn btn-primary w-100"><i class="fas fa-search"></i> {{ _('btn_search') }}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-9">
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <h4><i class="fas fa-list"></i> {{ _('nav_search') }}</h4>
+                <span class="text-muted">{{ pagination.total }} {{ _('home_stats_machines') }}</span>
+            </div>
+            {% if machines %}
+            <div class="row">
+                {% for machine in machines %}
+                <div class="col-md-4 mb-4">
+                    <div class="card">
+                        <img src="{{ url_for('static', filename='uploads/' + machine.primary_image()) }}" class="card-img-top" alt="{{ machine.name }}">
+                        <div class="card-body">
+                            <h6 class="card-title">{{ machine.name[:25] }}{% if machine.name|length > 25 %}...{% endif %}</h6>
+                            <p class="text-muted small mb-1"><i class="fas fa-map-marker-alt"></i> {{ machine.wilaya }} | <i class="fas fa-tag"></i> {{ machine.category[:12] }}</p>
+                            <p class="text-primary fw-bold mb-2">{{ "{:,.0f}".format(machine.price) }} {{ _('label_dzd') }}</p>
+                            <div class="d-flex justify-content-between">
+                                <a href="{{ url_for('machine_detail', slug=machine.slug) }}" class="btn btn-primary btn-sm"><i class="fas fa-eye"></i> {{ _('btn_view') }}</a>
+                                <a href="{{ url_for('whatsapp_contact', machine_id=machine.id) }}" class="btn btn-success btn-sm" target="_blank"><i class="fab fa-whatsapp"></i></a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% if pagination.pages > 1 %}
+            <nav aria-label="Page navigation">
+                <ul class="pagination justify-content-center">
+                    {% for page_num in pagination.iter_pages() %}
+                        {% if page_num %}
+                            <li class="page-item {% if page_num == pagination.page %}active{% endif %}">
+                                <a class="page-link" href="{{ url_for('search', q=query, wilaya=request.args.get('wilaya', ''), category=request.args.get('category', ''), min_price=request.args.get('min_price', ''), max_price=request.args.get('max_price', ''), page=page_num) }}">{{ page_num }}</a>
+                            </li>
+                        {% else %}
+                            <li class="page-item disabled"><span class="page-link">...</span></li>
+                        {% endif %}
+                    {% endfor %}
+                </ul>
+            </nav>
+            {% endif %}
+            {% else %}
+            <div class="text-center py-5">
+                <i class="fas fa-search fa-4x text-muted mb-3"></i>
+                <h5>{{ _('search_no_results') }}</h5>
+            </div>
+            {% endif %}
+        </div>
+    </div>
+</div>
+{% endblock %}

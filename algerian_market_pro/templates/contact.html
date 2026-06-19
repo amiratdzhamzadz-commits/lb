@@ -1,0 +1,42 @@
+{% extends "base.html" %}
+{% block title %}{{ _('contact_title') }} - {{ _('site_name') }}{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2><i class="fas fa-envelope"></i> {{ _('contact_title') }}</h2>
+    <div class="row mt-4">
+        <div class="col-md-6 mb-4">
+            <div class="card">
+                <div class="card-body">
+                    <form method="POST">
+                        <input type="hidden" name="csrf_token" value="{{ csrf_token }}">
+                        <div class="mb-3">
+                            <label class="form-label">{{ _('contact_name') }}</label>
+                            <input type="text" name="name" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">{{ _('contact_email') }}</label>
+                            <input type="email" name="email" class="form-control" required>
+                        </div>
+                        <div class="mb-3">
+                            <label class="form-label">{{ _('contact_message') }}</label>
+                            <textarea name="message" class="form-control" rows="5" required></textarea>
+                        </div>
+                        <button type="submit" class="btn btn-primary"><i class="fas fa-paper-plane"></i> {{ _('btn_send') }}</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-6">
+            <div class="card">
+                <div class="card-body">
+                    <h5><i class="fas fa-map-marker-alt"></i> {{ _('site_name') }}</h5>
+                    <p>{{ _('site_tagline') }}</p>
+                    <hr>
+                    <p><i class="fas fa-envelope"></i> contact@algerianmarket.dz</p>
+                    <p><i class="fas fa-phone"></i> +213 (0) 000 00 00 00</p>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

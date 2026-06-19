@@ -1,0 +1,53 @@
+{% extends "base.html" %}
+{% block title %}إعلان جديد - سوق الماكينات{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h2><i class="fas fa-plus-circle"></i> إضافة إعلان جديد</h2>
+    <p class="text-muted">املأ النموذج لإضافة ماكينة جديدة. سيتم مراجعة الإعلان قبل النشر.</p>
+    <form method="POST" enctype="multipart/form-data">
+        {{ form.hidden_tag() }}
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">{{ form.name.label }}</label>
+                {{ form.name(class="form-control") }}
+                {% for error in form.name.errors %}<small class="text-danger">{{ error }}</small>{% endfor %}
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label">{{ form.price.label }}</label>
+                {{ form.price(class="form-control") }}
+                {% for error in form.price.errors %}<small class="text-danger">{{ error }}</small>{% endfor %}
+            </div>
+            <div class="col-md-3 mb-3">
+                <label class="form-label">{{ form.phone.label }}</label>
+                {{ form.phone(class="form-control", placeholder="05XX XX XX XX") }}
+                {% for error in form.phone.errors %}<small class="text-danger">{{ error }}</small>{% endfor %}
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-6 mb-3">
+                <label class="form-label">{{ form.wilaya.label }}</label>
+                {{ form.wilaya(class="form-select") }}
+                {% for error in form.wilaya.errors %}<small class="text-danger">{{ error }}</small>{% endfor %}
+            </div>
+            <div class="col-md-6 mb-3">
+                <label class="form-label">{{ form.category.label }}</label>
+                {{ form.category(class="form-select") }}
+                {% for error in form.category.errors %}<small class="text-danger">{{ error }}</small>{% endfor %}
+            </div>
+        </div>
+        <div class="mb-3">
+            <label class="form-label">{{ form.description.label }}</label>
+            {{ form.description(class="form-control", rows="5") }}
+            {% for error in form.description.errors %}<small class="text-danger">{{ error }}</small>{% endfor %}
+        </div>
+        <div class="mb-3">
+            <label class="form-label">{{ form.images.label }}</label>
+            {{ form.images(class="form-control", multiple=True) }}
+            <small class="text-muted">يمكنك اختيار عدة صور (JPG, PNG). أول صورة ستكون الصورة الرئيسية.</small>
+            {% for error in form.images.errors %}<small class="text-danger">{{ error }}</small>{% endfor %}
+        </div>
+        <button type="submit" class="btn btn-primary btn-lg"><i class="fas fa-paper-plane"></i> نشر الإعلان</button>
+        <a href="{{ url_for('seller_dashboard') }}" class="btn btn-secondary btn-lg">إلغاء</a>
+    </form>
+</div>
+{% endblock %}
